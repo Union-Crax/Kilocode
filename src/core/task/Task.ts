@@ -492,7 +492,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 					if (providerRef) {
 						BrowserSessionPanelManager.getInstance(providerRef)
 							.show()
-							.catch((err) => {
+							.catch((err: unknown) => {
 								// Log non-critical error when showing browser panel fails
 								console.error("[Task] Failed to show Browser Session panel:", err)
 							})
