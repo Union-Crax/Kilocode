@@ -221,8 +221,13 @@ export async function saveConfig(config: CLIConfig, skipValidation: boolean = fa
 			}
 		}
 
-		// Write config with pretty formatting
-		await fs.writeFile(configFile, JSON.stringify(config, null, 2))
+		// kilocode_change start - Use atomic write to prevent config corruption
+		// Write to temporary file first, then rename to ensure atomicity
+		const tempFile = `${configFile}.tmp`
+		await fs.writeFile(tempFile, JSON.stringify(config, null, 2))
+		// Atomic rename - if this fails mid-operation, original config is preserved
+		await fs.rename(tempFile, configFile)
+		// kilocode_change end
 		logs.debug("Config saved successfully", "ConfigPersistence")
 	} catch (error) {
 		logs.error("Failed to save config", "ConfigPersistence", { error })

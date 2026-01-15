@@ -38,7 +38,9 @@ export interface AuthProvider {
 	/** Unique identifier for the provider */
 	value: string
 	/** Execute the authentication flow */
-	authenticate(): Promise<AuthResult>
+	// kilocode_change - Add optional parameter for existing provider IDs
+	authenticate(existingProviderIds?: string[]): Promise<AuthResult>
+	// kilocode_change end
 }
 
 /**

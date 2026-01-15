@@ -10,6 +10,7 @@ import { resetMessageCutoffAtom, yoloModeAtom, isCancellingAtom } from "./ui.js"
 import { extensionModeAtom, customModesAtom } from "./extension.js"
 import { getAllModes } from "../../constants/modes/defaults.js"
 import { logs } from "../../services/logs.js"
+import { isTaskAbortedError } from "../../utils/errors.js" // kilocode_change
 
 /**
  * Action atom to send a webview message to the extension
@@ -135,19 +136,15 @@ export const cancelTaskAtom = atom(null, async (get, set) => {
 	try {
 		await set(sendWebviewMessageAtom, message)
 	} catch (error) {
+		// kilocode_change start - Use proper error class instead of fragile string matching
 		// Check if this is a task abortion error (expected when canceling)
-		const isTaskAbortError =
-			error instanceof Error &&
-			error.message &&
-			error.message.includes("task") &&
-			error.message.includes("aborted")
-
-		if (!isTaskAbortError) {
+		if (!isTaskAbortedError(error)) {
 			// Only log/throw unexpected errors
 			logs.error("Failed to cancel task", "actions", { error })
 			throw error
 		}
 		// Silently handle expected task abortion errors
+		// kilocode_change end
 	}
 })
 

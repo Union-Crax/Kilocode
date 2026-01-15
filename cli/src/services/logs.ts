@@ -67,10 +67,17 @@ export class LogsService {
 
 		// Initialize file logging - use centralized logs directory
 		this.logFilePath = path.join(KiloCodePaths.getLogsDir(), "cli.txt")
+		// kilocode_change start - Improve error handling for file logging initialization
 		// Initialize file logging asynchronously (don't await to avoid blocking constructor)
-		this.initializeFileLogging().catch(() => {
-			// Error handling is done within initializeFileLogging
+		this.initializeFileLogging().catch((error) => {
+			// Log initialization failures to console since file logging may not be available
+			if (this.originalConsole) {
+				this.originalConsole.error("Failed to initialize file logging asynchronously:", error)
+			}
+			// Disable file logging if initialization fails
+			this.fileLoggingEnabled = false
 		})
+		// kilocode_change end
 	}
 
 	/**
