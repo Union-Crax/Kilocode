@@ -36,7 +36,10 @@ export default async function authWizard(): Promise<void> {
 		// Execute the provider's authentication flow
 		let authResult
 		try {
-			authResult = await provider.authenticate()
+			// kilocode_change - Pass existing provider IDs to enable unique ID generation
+			const existingProviderIds = config.config.providers.map((p) => p.id)
+			authResult = await provider.authenticate(existingProviderIds)
+			// kilocode_change end
 		} catch (error) {
 			// Check if this is a user cancellation (Ctrl+C)
 			if (error instanceof Error && error.name === "ExitPromptError") {

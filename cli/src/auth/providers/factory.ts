@@ -12,7 +12,34 @@ import inquirer from "inquirer"
  * @returns Authentication function that prompts for required fields
  */
 function createGenericAuthFunction(providerName: ProviderName) {
-	return async (): Promise<AuthResult> => {
+	// kilocode_change start - Generate unique provider ID based on existing providers
+	/**
+	 * Generates a unique provider ID by checking existing provider IDs
+	 * @param providerName - The provider name
+	 * @param existingIds - Array of existing provider IDs to check against
+	 * @returns A unique provider ID
+	 */
+	const generateUniqueProviderId = (providerName: string, existingIds: string[] = []): string => {
+		// Try "default" first
+		if (!existingIds.includes("default")) {
+			return "default"
+		}
+		// Try provider name
+		if (!existingIds.includes(providerName)) {
+			return providerName
+		}
+		// Generate numbered ID
+		let counter = 1
+		let candidateId = `${providerName}-${counter}`
+		while (existingIds.includes(candidateId)) {
+			counter++
+			candidateId = `${providerName}-${counter}`
+		}
+		return candidateId
+	}
+
+	return async (existingProviders: string[] = []): Promise<AuthResult> => {
+		// kilocode_change end
 		const requiredFields = PROVIDER_REQUIRED_FIELDS[providerName] || []
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const prompts: any[] = []
@@ -54,14 +81,16 @@ function createGenericAuthFunction(providerName: ProviderName) {
 						if (fieldMeta.type === "boolean") {
 							return true
 						}
+						// kilocode_change - Improved validation to reject whitespace-only input
 						// Optional fields can be empty
 						if (isOptional) {
 							return true
 						}
-						// Required fields must have a value
+						// Required fields must have a value (reject whitespace-only strings)
 						if (!input || (typeof input === "string" && input.trim() === "")) {
 							return `${fieldMeta.label} is required`
 						}
+						// kilocode_change end
 						return true
 					},
 				})
@@ -71,12 +100,14 @@ function createGenericAuthFunction(providerName: ProviderName) {
 		// Prompt user for all fields
 		const answers = await inquirer.prompt(prompts)
 
+		// kilocode_change - Generate unique ID instead of hardcoded "default"
 		// Build provider config
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const providerConfig: any = {
-			id: "default",
+			id: generateUniqueProviderId(providerName, existingProviders),
 			provider: providerName,
 		}
+		// kilocode_change end
 
 		// Add all answered fields to config
 		for (const [key, value] of Object.entries(answers)) {
