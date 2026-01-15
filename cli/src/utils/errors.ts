@@ -141,16 +141,40 @@ export function formatErrorForLogging(error: unknown): {
 	context?: Record<string, unknown>
 } {
 	if (isCLIError(error)) {
-		return {
+		// kilocode_change - Fix TypeScript exactOptionalPropertyTypes error
+		// Only include optional properties if they have defined values
+		const result: {
+			message: string
+			stack?: string
+			code?: string
+			context?: Record<string, unknown>
+		} = {
 			message: error.message,
-			stack: error.stack,
-			code: error.code,
-			context: error.context,
 		}
+		if (error.stack !== undefined) {
+			result.stack = error.stack
+		}
+		if (error.code !== undefined) {
+			result.code = error.code
+		}
+		if (error.context !== undefined) {
+			result.context = error.context
+		}
+		return result
+		// kilocode_change end
 	}
 
-	return {
+	// kilocode_change - Fix TypeScript exactOptionalPropertyTypes error
+	const result: {
+		message: string
+		stack?: string
+	} = {
 		message: getErrorMessage(error),
-		stack: getErrorStack(error),
 	}
+	const stack = getErrorStack(error)
+	if (stack !== undefined) {
+		result.stack = stack
+	}
+	return result
+	// kilocode_change end
 }
